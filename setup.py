@@ -58,7 +58,7 @@ class BuildCLib(build_clib):
     def get_library_names(self):
         if not self.libraries:
             return []
-        return ['pcre', 'metadata', 'yangdata', 'nacm', 'user_date_and_time']
+        return ['pcre', 'metadata', 'yangdata', 'nacm', 'user_inet_types', 'user_yang_types']
 
 
 class BuildExt(build_ext):
@@ -79,7 +79,7 @@ if os.environ.get('LIBYANG_INSTALL') != 'system':
 
 setuptools.setup(
     name='libyang',
-    version='0.16.78',
+    version='1.0.25',
     description='CFFI bindings to libyang',
     long_description=open('README.rst').read(),
     url='https://github.com/rjarry/libyang-cffi',
