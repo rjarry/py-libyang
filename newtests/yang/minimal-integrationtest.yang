@@ -1,0 +1,88 @@
+module minimal-integrationtest {
+
+  namespace "http://brewerslabng.mellon-collie.net/yang/minimal-integrationtest";
+  prefix "minimal-integrationtest";
+
+  description "A yang module to tets the important things of libyang's data nodes";
+
+  container types {
+    leaf str1 {
+      type string;
+    }
+    leaf str2 {
+      type string;
+    }
+    leaf str3 {
+      type string;
+    }
+    leaf enumeratio {
+      type enumeration {
+        enum A;
+        enum Z;
+      }
+    }
+    leaf void {
+      type empty;
+    }
+    leaf bool {
+      type boolean;
+    }
+    leaf dec_64 {
+      type decimal64 {
+        fraction-digits 3;
+      }
+    }
+    leaf int_8 {
+      type int8;
+    }
+    leaf int_16 {
+      type int16;
+    }
+    leaf int_32 {
+      type int32;
+    }
+    leaf int_64 {
+      type int64;
+    }
+    leaf u_int_8 {
+      type uint8;
+    }
+    leaf u_int_16 {
+      type uint16;
+    }
+    leaf u_int_32 {
+      type uint32;
+    }
+    leaf u_int_64 {
+      type uint64;
+    }
+    container present {
+      presence true;
+    }
+    list collection {
+      key x;
+      leaf x {
+        type string;
+      }
+    }
+    leaf-list simplecollection {
+      type string;
+    }
+  }
+
+  container leaf_refs {
+    leaf leaf_ref_consumer {
+      type leafref {
+        path "/minimal-integrationtest:leaf_refs/minimal-integrationtest:leaf_ref_data/minimal-integrationtest:key";
+      }
+    }
+
+    list leaf_ref_data {
+      key "key";
+
+      leaf "key" {
+        type string;
+      }
+    }
+  }
+}
