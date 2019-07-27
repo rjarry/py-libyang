@@ -387,6 +387,23 @@ struct lyd_difflist {
 };
 
 
+struct lyd_node_leaf_list {
+    struct lys_node *schema;
+    uint8_t validity;
+
+    uint8_t dflt:1;
+    uint8_t when_status:3;
+		struct lyd_attr *attr;
+    struct lyd_node *next;
+    struct lyd_node *prev;
+    struct lyd_node *parent;
+    uint32_t hash;
+		const char *value_str;
+		lyd_val value;
+		LY_DATA_TYPE value_type;
+    uint8_t value_flags;
+};
+
 struct lyd_node *lyd_new_path(struct lyd_node*, const struct ly_ctx*, const char*, void*, int, int);
 int lyd_print_file(FILE *f, const struct lyd_node *root, LYD_FORMAT format, int options);
 struct ly_set *lyd_find_path(const struct lyd_node *ctx_node, const char *path);

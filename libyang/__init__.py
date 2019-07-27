@@ -116,6 +116,56 @@ class Context(object):
 
 
 #------------------------------------------------------------------------------
+
+class DataTree:
+
+    """
+    Manage a libyang data tree in memory, which can then later be seralised
+    into XML/JSON with libyang itself.
+
+    As elements of data are set they will be validated against the schema of
+    that particular node.
+    """
+
+    def __init__(self, ctx):
+        self._ctx = ctx._ctx
+        self._root = None
+
+    def remove(self):
+        if self._root:
+            lib.lyd_free_withsiblings(self._root)
+
+    def set_xpath(self, xpath, value):
+        """
+        Set a value by XPAH - with siblings/dependent nodes getting created.
+        """
+        if self._root is None:
+            self._root = lib.lyd_new_path(ffi.NULL, self._ctx, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
+        else:
+            lib.lyd_new_path(self._root, ffi.NULL, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
+
+    def get_xpath(self, xpath):
+        """
+        Get the value at XPATH - returns a generator
+
+        """
+        # TODO: work out what happens with a python generator, if the caller just calls next() does gc get as
+        # far as actually calling ly_set_free()????
+
+        if self._root is None:
+            return
+
+        node_set = lib.lyd_find_path(self._root, str2c(xpath))
+        if node_set == ffi.NULL:
+            return
+
+        for i in range(node_set.number):
+            yield DataNode(self, node_set.set.d[i])
+
+        lib.ly_set_free(node_set)
+
+    
+#------------------------------------------------------------------------------
 LOG_LEVELS = {
     lib.LY_LLERR: logging.ERROR,
     lib.LY_LLWRN: logging.WARNING,

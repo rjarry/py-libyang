@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+gcc -Wall -g -o hello hello.c -lyang -I /usr/local/include/libyang/
+if [ $? == 0 ]
+then
+  echo "Compile ok";
+else
+  exit 1;
+fi
+./hello && cat /tmp/libyang.json
+# echo '<?xml version="1.0"?><data>' >/tmp/x.xml
+# cat /tmp/libyang.xml >>/tmp/x.xml
+# echo '</data>' >>/tmp/x.xml
+# xmllint --format /tmp/x.xml
+# echo '<?xml version="1.0"?><data>' >/tmp/y.xml
+# cat /tmp/libyang.b.xml >>/tmp/y.xml
+# echo '</data>' >>/tmp/y.xml
+# #xmllint --format /tmp/y.xml
