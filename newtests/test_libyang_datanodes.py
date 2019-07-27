@@ -34,3 +34,13 @@ class test_libyangdata(unittest.TestCase):
 
         # Assert
         self.assertEqual(len(result), 2)
+
+    def test_numbers(self):
+        # Act
+        xpath = BASE_XPATH + ":types/int_8"
+        value = 4
+        self.data.set_xpath(xpath, str(value));
+        result = next(self.data.get_xpath(xpath)).value
+
+        # Assert
+        self.assertEqual(result, value)
