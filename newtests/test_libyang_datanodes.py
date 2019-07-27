@@ -14,7 +14,7 @@ class test_libyangdata(unittest.TestCase):
         self.ctx = libyang.Context(YANG_DIR)
         self.ctx.load_module("minimal-integrationtest")
         self.data = libyang.DataTree(self.ctx)
-
+    
     def test_basic(self):
         # Act
         xpath = BASE_XPATH + ":types/str1"
@@ -27,8 +27,8 @@ class test_libyangdata(unittest.TestCase):
 
     def test_multiple(self):
         # Act
-        self.data.set_xpath(BASE_XPATH + ":types/str1", "A");
-        self.data.set_xpath(BASE_XPATH + ":types/str2", "B");
+        self.data.set_xpath(BASE_XPATH + ":types/str1", "A")
+        self.data.set_xpath(BASE_XPATH + ":types/str2", "B")
 
         result = list(self.data.get_xpath(BASE_XPATH + ":types/*"))
 
@@ -36,10 +36,36 @@ class test_libyangdata(unittest.TestCase):
         self.assertEqual(len(result), 2)
 
     def test_numbers(self):
-        # Act
+        # Arrange
         xpath = BASE_XPATH + ":types/int_8"
         value = 4
-        self.data.set_xpath(xpath, str(value));
+
+        # Act
+        self.data.set_xpath(xpath, value)
+        result = next(self.data.get_xpath(xpath)).value
+
+        # Assert
+        self.assertEqual(result, value)
+
+    def test_boolean_true(self):
+        # Act
+        xpath = BASE_XPATH + ":types/bool"
+        value = True
+
+        # Act
+        self.data.set_xpath(xpath, value);
+        result = next(self.data.get_xpath(xpath)).value
+
+        # Assert
+        self.assertEqual(result, value)
+
+    def test_boolean_false(self):
+        # Arrange
+        xpath = BASE_XPATH + ":types/bool"
+        value = False
+
+        # Act
+        self.data.set_xpath(xpath, value);
         result = next(self.data.get_xpath(xpath)).value
 
         # Assert

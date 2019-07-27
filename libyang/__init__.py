@@ -139,10 +139,14 @@ class DataTree:
         """
         Set a value by XPAH - with siblings/dependent nodes getting created.
         """
+        value = DataNode.convert_python_value(value)
+
         if self._root is None:
             self._root = lib.lyd_new_path(ffi.NULL, self._ctx, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
+            print("THIS_NODE(IS_ROOT) ",self._root)
         else:
-            lib.lyd_new_path(self._root, ffi.NULL, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
+            this_node = lib.lyd_new_path(self._root, ffi.NULL, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
+            print("THIS NODE", this_node)
 
     def get_xpath(self, xpath):
         """
@@ -160,7 +164,7 @@ class DataTree:
             return
 
         for i in range(node_set.number):
-            yield DataNode(self, node_set.set.d[i])
+            yield DataNode(self, node_set.set.d[i], xpath)
 
         lib.ly_set_free(node_set)
 
