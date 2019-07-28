@@ -143,15 +143,12 @@ class DataTree:
 
         if self._root is None:
             self._root = lib.lyd_new_path(ffi.NULL, self._ctx, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
-            print("THIS_NODE(IS_ROOT) ",self._root)
         else:
             this_node = lib.lyd_new_path(self._root, ffi.NULL, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
-            print("THIS NODE", this_node)
 
     def get_xpath(self, xpath):
         """
         Get the value at XPATH - returns a generator
-
         """
         # TODO: work out what happens with a python generator, if the caller just calls next() does gc get as
         # far as actually calling ly_set_free()????

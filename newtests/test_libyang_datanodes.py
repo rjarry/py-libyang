@@ -37,8 +37,34 @@ class test_libyangdata(unittest.TestCase):
 
     def test_numbers(self):
         # Arrange
-        xpath = BASE_XPATH + ":types/int_8"
-        value = 4
+        for node, value in (
+            ('int_8', -128), ('int_16', 234), ('int_32', 32444),
+            ('u_int_8', 255), ('u_int_16', 234), ('u_int_32', 32444)):
+            xpath = BASE_XPATH + ":types/" + node
+
+            # Act
+            self.data.set_xpath(xpath, value)
+            result = next(self.data.get_xpath(xpath)).value
+
+            # Assert
+            self.assertEqual(result, value)
+
+    def test_decimal64(self):
+        # Arrange
+        xpath = BASE_XPATH + ":types/dec_64"
+        value = 4.442
+
+        # Act
+        self.data.set_xpath(xpath, value)
+        result = next(self.data.get_xpath(xpath)).value
+
+        # Assert
+        self.assertEqual(result, value)
+
+    def test_empty(self):
+        # Arrange
+        xpath = BASE_XPATH + ":types/void"
+        value = None
 
         # Act
         self.data.set_xpath(xpath, value)
