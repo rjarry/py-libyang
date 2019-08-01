@@ -32,18 +32,19 @@ class DataNode(object):
 
     def __init__(self, context, lyd_node, xpath=None):
         self.value = self._get_value_from_lyd_node(lyd_node,xpath)
+        self.xpath = xpath
 
     @staticmethod
     def convert_python_value(value):
         if isinstance(value, bool):
             if value is True:
-                return 'true'
-            return 'false'
+                return str2c('true')
+            return str2c('false')
 
         if value is None:
-            return ""
+            return ffi.NULL
 
-        return str(value)
+        return str2c(str(value))
 
     @staticmethod
     def _get_value_from_lyd_node(lyd_node, xpath=None):
@@ -66,12 +67,21 @@ class DataNode(object):
             elif type in DataNode.DECIMAL_TYPES:
                 return float(c2str(leaf.value_str))
             elif type in DataNode.EMPTY_TYPES:
-                return None
+                return True
             return c2str(leaf.value_str)
 
-        raise ValueError("Didnt manage to set a vlue")
+        if lyd_node.schema.nodetype == lib.LYS_LIST:
+            return True
+
+        if lyd_node.schema.nodetype == lib.LYS_CONTAINER:
+            return True
+
+        raise ValueError("Didnt manage to set a vlue.... %s" %(lyd_node.schema.nodetype))
         return None
+
+    def __str__(self):
+        return self.xpath
 
     def __repr__(self):
         cls = self.__class__
-        return '<%s.%s: %s>' % (cls.__module__, cls.__name__, str(self))
+        return '<%s.%s: %s>' % (cls.__module__, cls.__name__, str(self) )

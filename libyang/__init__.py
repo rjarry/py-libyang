@@ -26,6 +26,7 @@ from _libyang import lib
 
 from .schema import Module
 from .schema import Node
+from .data import DataNode
 from .util import LibyangError
 from .util import c2str
 from .util import str2c
@@ -131,10 +132,6 @@ class DataTree:
         self._ctx = ctx._ctx
         self._root = None
 
-    def remove(self):
-        if self._root:
-            lib.lyd_free_withsiblings(self._root)
-
     def set_xpath(self, xpath, value):
         """
         Set a value by XPAH - with siblings/dependent nodes getting created.
@@ -142,9 +139,9 @@ class DataTree:
         value = DataNode.convert_python_value(value)
 
         if self._root is None:
-            self._root = lib.lyd_new_path(ffi.NULL, self._ctx, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
+            self._root = lib.lyd_new_path(ffi.NULL, self._ctx, str2c(xpath), value, 0, lib.LYD_PATH_OPT_UPDATE)
         else:
-            this_node = lib.lyd_new_path(self._root, ffi.NULL, str2c(xpath), str2c(value), 0, lib.LYD_PATH_OPT_UPDATE)
+            lib.lyd_new_path(self._root, ffi.NULL, str2c(xpath),value, 0, lib.LYD_PATH_OPT_UPDATE)
 
     def get_xpath(self, xpath):
         """
@@ -162,8 +159,54 @@ class DataTree:
 
         for i in range(node_set.number):
             yield DataNode(self, node_set.set.d[i], xpath)
-
         lib.ly_set_free(node_set)
+
+    def gets_xpath(self, xpath):
+        """
+        Get the XPATH of each list element wtithin the list - returns a generator
+        """
+        if self._root is None:
+            return
+
+        node_set = lib.lyd_find_path(self._root, str2c(xpath))
+        if node_set == ffi.NULL:
+            return []
+
+        for i in range(node_set.number):
+            yield c2str(lib.lyd_path(node_set.set.d[i]))
+        lib.ly_set_free(node_set)
+
+    def delete_xpath(self, xpath):
+        """
+        Delete the value at XPATH
+        """
+        if self._root is None:
+            return
+
+        node_set = lib.lyd_find_path(self._root, str2c(xpath))
+        if node_set == ffi.NULL:
+            return
+
+        if not node_set.number  == 1:
+            raise LibyangError("delete_xpath only tested to delete single xpaths to avoid caring about order")
+        lib.lyd_unlink(node_set.set.d[0])
+
+    def count_xpath(self, xpath):
+        """
+        Count results for a given XPATH
+        """
+        if self._root is None:
+            return 0
+
+        node_set = lib.lyd_find_path(self._root, str2c(xpath))
+        if node_set == ffi.NULL:
+            return 0
+        return int(node_set.number)
+
+    def save_to_file(self, filename, format=lib.LYD_XML):
+        fh=open(filename, "w")
+        lib.lyd_print_file(fh, self._root, format, lib.LYP_WITHSIBLINGS)
+        fh.close()
 
     
 #------------------------------------------------------------------------------

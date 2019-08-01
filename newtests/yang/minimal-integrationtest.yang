@@ -15,6 +15,10 @@ module minimal-integrationtest {
     leaf str3 {
       type string;
     }
+    leaf str4 {
+      type string;
+      default "string4-default";
+    }
     leaf enumeratio {
       type enumeration {
         enum A;
@@ -64,9 +68,26 @@ module minimal-integrationtest {
       leaf x {
         type string;
       }
+      leaf y {
+        type string;
+      }
     }
     leaf-list simplecollection {
       type string;
+    }
+  }
+
+  container nesting {
+    container bronze {
+      container silver {
+        container gold {
+          container platinum {
+            leaf deep {
+              type string;
+            }
+          }
+        }
+      }
     }
   }
 

@@ -133,3 +133,24 @@ static char *lypy_node_fullname(const struct lys_node *node)
 
 	return fullname;
 }
+
+
+static char *get_xpath_from_lyd_node(const struct lyd_node *node) {
+  const struct lyd_node *tmp_node = NULL;
+
+  tmp_node = node;
+  while(1==1){
+
+    printf("node type; %d\n", tmp_node->schema->nodetype);
+    if(tmp_node->schema->nodetype & (LYS_LEAF | LYS_LEAFLIST)){
+      break;
+    }
+    if(tmp_node->child){
+      tmp_node = tmp_node->child;
+    }else{
+      break;
+    }
+  }
+
+  return lyd_path(tmp_node);
+}
