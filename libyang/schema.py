@@ -63,6 +63,16 @@ class Module(object):
             raise self.context.error('no such feature: %r' % name)
         return bool(ret)
 
+    def features(self):
+        for i in range(self._module.features_size):
+            yield Feature(self.context, self._module.features[i])
+
+    def get_feature(self, name):
+        for f in self.features():
+            if f.name() == name:
+                return f
+        raise self.context.error('no such feature: %r' % name)
+
     def revisions(self):
         for i in range(self._module.rev_size):
             yield Revision(self.context, self._module.rev[i])
@@ -316,6 +326,168 @@ class Type(object):
 
 
 #------------------------------------------------------------------------------
+class Feature(object):
+
+    def __init__(self, context, feature_p):
+        self.context = context
+        self._feature = feature_p
+
+    def name(self):
+        return c2str(self._feature.name)
+
+    def description(self):
+        return c2str(self._feature.dsc)
+
+    def reference(self):
+        return c2str(self._feature.ref)
+
+    def state(self):
+        return bool(self._feature.flags & lib.LYS_FENABLED)
+
+    def deprecated(self):
+        return bool(self._feature.flags & lib.LYS_STATUS_DEPRC)
+
+    def obsolete(self):
+        return bool(self._feature.flags & lib.LYS_STATUS_OBSLT)
+
+    def if_features(self):
+        for i in range(self._feature.iffeature_size):
+            yield IfFeatureExpr(self.context, self._feature.iffeature[i])
+
+    def module(self):
+        module_p = lib.lys_main_module(self._feature.module)
+        if not module_p:
+            raise self.context.error('cannot get module')
+        return Module(self.context, module_p)
+
+    def __str__(self):
+        return self.name()
+
+
+#------------------------------------------------------------------------------
+class IfFeatureExpr(object):
+
+    def __init__(self, context, iffeature_p):
+        self.context = context
+        self._iffeature = iffeature_p
+
+    def _get_operator(self, position):
+        # the ->exp field is a 2bit array of operator values stored under
+        # a uint8_t C array.
+        mask = 0x3  # 2bits mask
+        item = self._iffeature.expr[position // 4]
+        result = item & (mask << (2 * (position % 4)))
+        return result >> (2 * (position % 4))
+
+    def _flatten(self):
+        op_index = 0
+        feat_index = 0
+        expected_tokens = 1
+        while expected_tokens > 0:
+            operator = self._get_operator(op_index)
+            op_index += 1
+            if operator == lib.LYS_IFF_F:
+                yield self._iffeature.features[feat_index]
+                feat_index += 1
+                expected_tokens -= 1
+            elif operator == lib.LYS_IFF_NOT:
+                yield operator
+            else:
+                expected_tokens += 1
+                yield operator
+
+    def _tree(self, tokens):
+        t = next(tokens)
+        if t == lib.LYS_IFF_NOT:
+            return IfNotFeature(self.context, self._tree(tokens))
+        elif t == lib.LYS_IFF_AND:
+            return IfAndFeatures(
+                self.context, self._tree(tokens), self._tree(tokens))
+        elif t == lib.LYS_IFF_OR:
+            return IfOrFeatures(
+                self.context, self._tree(tokens), self._tree(tokens))
+        else:
+            return IfFeature(self.context, t)
+
+    def tree(self):
+        return self._tree(self._flatten())
+
+    def dump(self):
+        return self.tree().dump()
+
+    def __str__(self):
+        return str(self.tree()).strip('()')
+
+
+#------------------------------------------------------------------------------
+class IfFeature(object):
+
+    def __init__(self, context, feature_p):
+        self.context = context
+        self._feature = feature_p
+
+    def feature(self):
+        return Feature(self.context, self._feature)
+
+    def dump(self, indent=0):
+        feat = self.feature()
+        return '%s%s [%s]\n' % (' ' * indent, feat.name(), feat.description())
+
+    def __str__(self):
+        return self.feature().name()
+
+
+#------------------------------------------------------------------------------
+class IfNotFeature(object):
+
+    def __init__(self, context, child):
+        self.context = context
+        self.child = child
+
+    def dump(self, indent=0):
+        return ' ' * indent + 'NOT\n' + self.child.dump(indent + 1)
+
+    def __str__(self):
+        return 'NOT %s' % self.child
+
+
+#------------------------------------------------------------------------------
+class IfAndFeatures(object):
+
+    def __init__(self, context, a, b):
+        self.context = context
+        self.a = a
+        self.b = b
+
+    def dump(self, indent=0):
+        s = ' ' * indent + 'AND\n'
+        s += self.a.dump(indent + 1)
+        s += self.b.dump(indent + 1)
+        return s
+
+    def __str__(self):
+        return '%s AND %s' % (self.a, self.b)
+
+
+#------------------------------------------------------------------------------
+class IfOrFeatures(object):
+
+    def __init__(self, context, a, b):
+        self.context = context
+        self.a = a
+        self.b = b
+
+    def dump(self, indent=0):
+        s = ' ' * indent + 'OR\n'
+        s += self.a.dump(indent + 1)
+        s += self.b.dump(indent + 1)
+        return s
+
+    def __str__(self):
+        return '(%s OR %s)' % (self.a, self.b)
+
+
+#------------------------------------------------------------------------------
 class Node(object):
 
     CONTAINER = lib.LYS_CONTAINER
@@ -392,6 +564,10 @@ class Node(object):
         if ext:
             return Extension(self.context, ext)
         return None
+
+    def if_features(self):
+        for i in range(self._node.iffeature_size):
+            yield IfFeatureExpr(self.context, self._node.iffeature[i])
 
     def __repr__(self):
         cls = self.__class__
