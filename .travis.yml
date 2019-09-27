@@ -1,6 +1,6 @@
 ---
 language: python
-dist: xenial
+dist: bionic
 cache: pip
 sudo: false
 
@@ -16,30 +16,30 @@ addons:
 matrix:
   include:
     - env: TOXENV=lint
-      python: 3.6.5
+      python: 3.7
     - env: TOXENV=py27-static
-      python: 2.7.15
+      python: 2.7
     - env: TOXENV=py27-dynamic
-      python: 2.7.15
+      python: 2.7
     - env: TOXENV=pypy-static
-      python: pypy2.7-5.10.0
+      python: pypy
     - env: TOXENV=pypy-dynamic
-      python: pypy2.7-5.10.0
+      python: pypy
     - env: TOXENV=py35-static
       python: 3.5
     - env: TOXENV=py35-dynamic
       python: 3.5
     - env: TOXENV=pypy3-static
-      python: pypy3.5
+      python: pypy3
     - env: TOXENV=pypy3-dynamic
-      python: pypy3.5
+      python: pypy3
     - env: TOXENV=py36-static
-      python: 3.6.5
+      python: 3.6
     - env: TOXENV=py36-dynamic
-      python: 3.6.5
+      python: 3.6
     - env: TOXENV=py37-static
-      python: 3.7.1
+      python: 3.7
     - env: TOXENV=py37-dynamic
-      python: 3.7.1
+      python: 3.7
 
 script: tox -- $(git ls-files '*.py')
